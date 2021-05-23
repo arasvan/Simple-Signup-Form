@@ -9,9 +9,10 @@
 
 <body>
 
-    <!-- html components -->
-
     <div id="app">
+
+        <!-- main form container -->
+        <!-- contains the entire form, resizing it will change the entire form -->
 
         <div id="form" ref="formElement">
 
@@ -60,7 +61,7 @@
 
             </div>
 
-            <!-- instruction cards, must be outside of main form content -->
+            <!-- instruction cards -->
 
             <div v-for="(field,i) in screens[screenActive].fields"
                  class="instructions-card"
@@ -78,13 +79,15 @@
 
     </div>
 
-    <!-- vue.js components -->
+    <!-- vue.js code -->
 
     <script>
 
         let app = new Vue({
 
             el: "#app",
+
+            //initialise variables;
 
             data: {
 
@@ -98,7 +101,18 @@
                 answers: []
             },
 
-            //build all screens;
+            /* the code in mounted() is used to build the form;
+            |=================================================================================|
+            | addField(title, html input type, regex, instructions) will add a field;         |
+            | => a field object will be added to the screenBuilder array;                     |
+            | => for 'date' input types, write "18only" in the regex parameter for age check; |
+            |                                                                                 |
+            | addScreen() will finish up the screen;                                          |
+            | => this will push all the fields into a screen;                                 |
+            | => see the examples below;                                                      |
+            |=================================================================================|
+            */
+
 
             mounted() {
 
@@ -119,10 +133,10 @@
                     addField("Date of Birth", "date", "18only", "Enter your date of birth:" + bp + "You must be 18 or above.");
                     addScreen();
 
-                    //load first screen;
+                    //load first screen, do not modify these two lines;
 
                     setTimeout(goToScreen, 300, 0);
-                    addScreen();
+                    addScreen();    //used to prevent array errors;
                 } 
             },
 
@@ -161,15 +175,15 @@
 
                 //screen animations controller;
 
-                goToScreen(index) {
+                goToScreen(targetScreen) {
 
                     with (this) {
 
-                        //form is in collapsed state, expand the form;
+                        //when the form is in its closed state, load all content;
 
                         if ($refs.formElement.offsetHeight == 10) {
 
-                            //check if the user is editing an answer;
+                            //check if the user is in the confirmation screen;
 
                             if (confirmationScreen) {
 
@@ -178,13 +192,15 @@
 
                                 //check if the entire form is completed;
 
-                                if (screenActive + 1 == screens.length) {
+                                if (screenActive + 1 == screens.length && targetScreen == screens.length) {
                                     formCompleted = true;
                                     $refs.formElement.style["height"] = "180px";
                                     return null;
                                 }
 
                             } else {
+
+                                //the currently active screen has been completed, save input answers;
 
                                 for (var i = 0; i < screens[screenActive].fields.length; i++) {
                                     let input = document.getElementById("input" + i);
@@ -193,9 +209,9 @@
                                 }
                             }
 
-                            screenActive = index;
+                            screenActive = targetScreen;
 
-                            //load confirmation screen if this is the last step;
+                            //load confirmation screen, if all screens completed;
 
                             if (screenActive == screens.length - 1) {
 
@@ -208,7 +224,7 @@
                                 return null;
                             }
 
-                            //set the new active screen, calculate form height;
+                            //load the new active screen, calculate form height;
 
                             let formHeight = (115 + screens[screenActive].fields.length * 85);
                             $refs.formElement.style["height"] = formHeight + "px";
@@ -218,13 +234,13 @@
 
                             setTimeout(loadFields, 5);
 
-                        //form is in expanded state, collapse the form;
+                        //when the form is opened, run the closing animation first;
 
                         } else {
 
                             $refs.formElement.style["height"] = "10px";
                             blockButtonHovering();
-                            setTimeout(goToScreen, 600, index);
+                            setTimeout(goToScreen, 600, targetScreen);
                         }
                     }
                 },
@@ -279,7 +295,7 @@
                     this.$refs.nextButton.classList.remove("prevent-hover");
                 },
 
-                //next button click handler;
+                //nextButton click handler;
 
                 nextScreen() {
 
@@ -293,6 +309,10 @@
                             }
                         }
 
+                        //I DISABLED VALIDATION FOR CONVENIENCE;
+                        //if you uncomment this line, the form won't progress unless you enter valid input;
+
+                        //if (allInputsValid) {goToScreen(screenActive + 1); return null;}
                         if (true) goToScreen(screenActive + 1);
                     }
                 },
@@ -308,7 +328,7 @@
 
                         if (input.type != "date") {
 
-                            //simple input, just test regex;
+                            //regex test for validation;
                             if (screens[screenActive].fields[index].regex.test(input.value)) isValid = true;
 
                         } else {
@@ -328,6 +348,7 @@
 
                         if (isValid) {
 
+                            //valid input, make the textbox green;
                             document.getElementById("icon" + index).src = "images/ok_icon.png";
                             input.style.backgroundColor = "#f3fff0";
                             input.style.borderColor = "green";
@@ -335,6 +356,7 @@
 
                         } else {
 
+                            //invalid input, make the textbox red;
                             document.getElementById("icon" + index).src = "images/error_icon.png";
                             input.style.backgroundColor = "#ffe8e8";
                             input.style.borderColor = "#db0000";

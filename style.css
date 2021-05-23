@@ -8,7 +8,7 @@ body {
 
 .prevent-hover {pointer-events: none;}
 
-/* main form div */
+/* main form div ================================================================= */
 
 #form {
     width: 90%;
@@ -47,7 +47,7 @@ body {
     background-color: #76d955;
 }
 
-/* form content container */
+/* form content container ================================================================= */
 
 #form-content {
     width: inherit;
@@ -65,11 +65,15 @@ body {
     position: absolute;
 }
 
+/* field title text */
+
 .field-container > span {
     font-size: 18px;
     font-weight: bold;
     position: absolute;
 }
+
+/* field input textbox */
 
 .field-container > input {
     top: 30px;
@@ -84,6 +88,8 @@ body {
     border-radius: 10px;
 }
 
+/* field error icon */
+
 .field-icon {
     top: 35px;
     left: 85%;
@@ -91,6 +97,8 @@ body {
     height: 20px;
     position: absolute;
 }
+
+/* field instructions card */
 
 .instructions-card {
     visibility: hidden;
@@ -108,12 +116,14 @@ body {
     color: black;
 }
 
-/* answers list */
+/* answers list ================================================================= */
 
 .answers-list {
     width: inherit;
     position: absolute;
 }
+
+/* anwser title */
 
 .answers-list > .title {
     color: black;
@@ -123,6 +133,8 @@ body {
     position: absolute;
 }
 
+/* anwser value */
+
 .answers-list > .answer {
     color: black;
     font-size: 18px;
@@ -131,6 +143,8 @@ body {
     top: 25px;
     position: absolute;
 }
+
+/* anwser edit button */
 
 .answers-list > .edit-icon {
     top: 25px;
@@ -179,6 +193,8 @@ body {
     background-color: white;
 }
 
+/* next button text */
+
 #next-button > span {
     color: inherit;
     font-size: 20px;
@@ -196,7 +212,7 @@ body {
     user-select: none;
 }
 
-/* form completed screen */
+/* form completed screen ================================================================= */
 
 #completed-message {
     width: inherit;
