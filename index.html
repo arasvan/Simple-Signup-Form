@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Signup Form</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- html components -->
+
+    <div id="app">
+
+        <div id="form" ref="formElement">
+
+            <!-- header -->
+
+            <div id="form-header"> <span> Sign Up </span> </div>
+
+            <!-- form content -->
+
+            <div id="form-content">
+
+                <!-- screen display (contains each field title, input box and validation icon) -->
+
+                <div v-for="(field,i) in screens[screenActive].fields"
+                     v-bind:style="{top: 25+i*85 + 'px'}"
+                     class="field-container"
+                     v-if="!confirmationScreen && !formCompleted">
+
+                    <span> {{field.title}} </span>
+                    <input v-bind:type="field.inputType" v-bind:id="'input'+i" v-on:focusout="validate(i)">
+                    <img src="images/info_icon.png" v-bind:id="'icon'+i" class="field-icon">
+                </div>
+
+                <!-- confirmation screen -->
+
+                <div v-for="(answer,i) in answers"
+                     class="answers-list"
+                     v-bind:style="{top: 30+i*60 + 'px'}"
+                     v-if="confirmationScreen && !formCompleted">
+
+                    <span class="title"> {{answer.fieldTitle}} </span>
+                    <span class="answer"> {{answer.value}} </span>
+                    <img src="images/edit_icon.png" v-on:click="goToScreen(answer.fieldScreen)" class="edit-icon">
+                </div>
+
+                <!-- signup completed screen -->
+
+                <div v-if="formCompleted">
+                    <span id="completed-message"> Signup complete! <br> Thank you for registering! </span>
+                    <img src="images/ok_icon.png" id="completed-icon">
+                </div>
+
+                <!-- 'next' button -->
+
+                <div id="next-button" v-on:click="nextScreen()" ref="nextButton"> <span> NEXT </span> </div>
+
+            </div>
+
+            <!-- instruction cards, must be outside of main form content -->
+
+            <div v-for="(field,i) in screens[screenActive].fields"
+                 class="instructions-card"
+                 v-bind:id="'instructionsCard' + i"
+                 v-bind:style="{top:70+i*85 + 'px'}">
+
+                <span> {{field.instructions}} </span>
+            </div>
+
+            <!-- footer -->
+
+            <div id="form-footer"> </div>
+
+        </div>
+
+    </div>
+
+    <!-- vue.js components -->
+
+    <script>
+
+        let app = new Vue({
+
+            el: "#app",
+
+            data: {
+
+                screens: [],
+                screenBuilder: [],
+                screenActive: 0,
+
+                confirmationScreen: false,
+                formCompleted: false,
+
+                answers: []
+            },
+
+            //build all screens;
+
+            mounted() {
+
+                with (this) {
+
+                    let bp = "\n" + String.fromCharCode(9679) + " "; //quick bullet point separator;
+
+                    //name and phone number screen;
+
+                    addField("Name", "text", /^[a-zA-Z]{1,128}$/, "Enter your name:" + bp + "No numbers allowed.");
+                    addField("Surname", "text", /^[a-zA-Z]{1,128}$/, "Enter your surname:" + bp + "No numbers allowed.");
+                    addField("Phone number", "text", /^[0-9]{11}$/, "Enter your phone number:" + bp + "No letters allowed." + bp + "11 digits required.");
+                    addScreen();
+
+                    //email and dob screen;
+
+                    addField("Email", "text", /^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/, "Enter a valid email." + bp + "Example: username@gmail.com");
+                    addField("Date of Birth", "date", "18only", "Enter your date of birth:" + bp + "You must be 18 or above.");
+                    addScreen();
+
+                    //load first screen;
+
+                    setTimeout(goToScreen, 300, 0);
+                    addScreen();
+                } 
+            },
+
+            methods: {
+
+                //add field to screen;
+
+                addField(title, inputType, regex, instructions) {
+
+                    with (this) {
+
+                        screenBuilder.push({
+                            title: title,
+                            inputType: inputType,
+                            regex: regex,
+                            instructions: instructions,
+                            id: answers.length,
+                        });
+
+                        answers.push({
+                            fieldTitle: title,
+                            fieldScreen: screens.length,
+                            value: null
+                        });
+                    }
+                },
+
+                //build the screen, add it to the screens array;
+
+                addScreen() {
+                    with (this) {
+                        screens.push({ id: screens.length, fields: screenBuilder });
+                        screenBuilder = [];
+                    }
+                },
+
+                //screen animations controller;
+
+                goToScreen(index) {
+
+                    with (this) {
+
+                        //form is in collapsed state, expand the form;
+
+                        if ($refs.formElement.offsetHeight == 10) {
+
+                            //check if the user is editing an answer;
+
+                            if (confirmationScreen) {
+
+                                $refs.nextButton.childNodes[0].innerHTML = "NEXT";
+                                confirmationScreen = false;
+
+                                //check if the entire form is completed;
+
+                                if (screenActive + 1 == screens.length) {
+                                    formCompleted = true;
+                                    $refs.formElement.style["height"] = "180px";
+                                    return null;
+                                }
+
+                            } else {
+
+                                for (var i = 0; i < screens[screenActive].fields.length; i++) {
+                                    let input = document.getElementById("input" + i);
+                                    let field = screens[screenActive].fields[i];
+                                    answers[field.id].value = input.value;
+                                }
+                            }
+
+                            screenActive = index;
+
+                            //load confirmation screen if this is the last step;
+
+                            if (screenActive == screens.length - 1) {
+
+                                let formHeight = (150 + answers.length * 60);
+                                $refs.formElement.style["height"] = formHeight + "px";
+                                $refs.nextButton.style["top"] = (formHeight - 60) + "px";
+
+                                $refs.nextButton.childNodes[0].innerHTML = "CONFIRM";
+                                confirmationScreen = true;
+                                return null;
+                            }
+
+                            //set the new active screen, calculate form height;
+
+                            let formHeight = (115 + screens[screenActive].fields.length * 85);
+                            $refs.formElement.style["height"] = formHeight + "px";
+                            $refs.nextButton.style["top"] = (formHeight - 60) + "px";
+
+                            //load each field;
+
+                            setTimeout(loadFields, 5);
+
+                        //form is in expanded state, collapse the form;
+
+                        } else {
+
+                            $refs.formElement.style["height"] = "10px";
+                            blockButtonHovering();
+                            setTimeout(goToScreen, 600, index);
+                        }
+                    }
+                },
+
+                //load fields;
+
+                loadFields() {
+
+                    with (this) {
+
+                        //load each field;
+
+                        for (var i = 0; i < screens[screenActive].fields.length; i++) {
+
+                            let field = screens[screenActive].fields[i];
+                            let input = document.getElementById("input" + i);
+                            let icon = document.getElementById("icon" + i);
+                            let instr = document.getElementById("instructionsCard" + i);
+
+                            //check if the user had already given input;
+
+                            input.value = "";
+
+                            for (var k = 0; k < answers.length; k++) {
+                                if (answers[k].fieldScreen == screenActive && answers[k].fieldTitle == field.title) {
+                                    if (answers[k].value != null && answers[k].value != "") {
+                                        input.value = answers[k].value;
+                                    }
+                                    break;
+                                }
+                            }
+
+                            //reset fields from previous screens;
+
+                            input.style.borderColor = "gray";
+                            input.style.backgroundColor = "white";
+                            icon.src = "images/info_icon.png";
+                            icon.onmouseover = function () { instr.style["visibility"] = "visible"; };
+                            icon.onmouseout = function () { instr.style["visibility"] = "hidden"; };
+                        }
+                    }
+                },
+
+                //prevent button mouse-over animations while the form is moving;
+
+                blockButtonHovering() {
+                    this.$refs.nextButton.classList.add("prevent-hover");
+                    setTimeout(this.unblockButtonHovering, 1000);
+                },
+
+                unblockButtonHovering() {
+                    this.$refs.nextButton.classList.remove("prevent-hover");
+                },
+
+                //next button click handler;
+
+                nextScreen() {
+
+                    with (this) {
+
+                        let allInputsValid = true;
+
+                        for (var i = 0; i < screens[screenActive].fields.length; i++) {
+                            if (!validate(i)) {
+                                allInputsValid = false;
+                            }
+                        }
+
+                        if (true) goToScreen(screenActive + 1);
+                    }
+                },
+
+                //validation function;
+
+                validate(index) {
+
+                    with (this) {
+
+                        let input = document.getElementById("input" + index);
+                        let isValid = false;
+
+                        if (input.type != "date") {
+
+                            //simple input, just test regex;
+                            if (screens[screenActive].fields[index].regex.test(input.value)) isValid = true;
+
+                        } else {
+
+                            //date input, calculate age difference if necessary;
+                            let givenDate = Date.parse(input.value);
+                            let todaysDate = Date.parse(new Date());
+                            let difference = (todaysDate - givenDate) / 86400000;
+
+                            if (screens[screenActive].fields[index].regex == "18only") {
+                                if (Math.abs(Math.round(difference / 365.25)) >= 18) isValid = true;
+                            } else {
+                                if (input.value != "") isValid = true;
+                            }
+                            
+                        }
+
+                        if (isValid) {
+
+                            document.getElementById("icon" + index).src = "images/ok_icon.png";
+                            input.style.backgroundColor = "#f3fff0";
+                            input.style.borderColor = "green";
+                            return true;
+
+                        } else {
+
+                            document.getElementById("icon" + index).src = "images/error_icon.png";
+                            input.style.backgroundColor = "#ffe8e8";
+                            input.style.borderColor = "#db0000";
+                            return false;
+                        }
+                    }
+                },
+            },
+            
+            });
+
+    </script>
+
+</body>
+
+</html>
